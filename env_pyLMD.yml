@@ -1,0 +1,36 @@
+name: pyLMD
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - astral=2.2
+  - future=0.18.2
+  - geopy=2.2.0
+  - geos=3.8.0
+  - h5netcdf=1.0.1
+  - hdf4=4.2.13
+  - hdf5=1.10.6
+  - jupyter=*
+  - jupyterlab=*
+  - matplotlib=3.5.1
+  - numpy=1.22.3
+  - openssl=1.1.1t
+  - pandas=1.4.3
+  - pickleshare=0.7.5
+  - pillow=9.2.0
+  - pip=22.*
+  - pyqt=5.9.2
+  - python=3.8.13
+  - pytz=2022.1
+  - regex=2022.7.9
+  - scipy=1.7.3
+  - setuptools=61.2.0
+  - shapely=1.7.1
+  - spyder=5.1.5
+  - tk=8.6.12
+  - urllib3=1.26.9
+  - xarray=2022.6.0
+  - yaml=0.2.5
+  - pip:
+    - jupyter_contrib_nbextensions
