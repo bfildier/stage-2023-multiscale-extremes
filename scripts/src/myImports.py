@@ -1,8 +1,7 @@
 ## Fundamentals and File Management
 import os
 import sys
-from load_TOOCAN_DYAMOND_modif_Ben import *
-
+import math
 
 ## Math and Data Manipulation
 import numpy as np 
@@ -23,4 +22,13 @@ from plot1DInvLog import *
 from plot1D import *
 from plot2D import *
 
+## ML and stats 
+
+from scipy.interpolate import griddata, LinearNDInterpolator
+from lmfit import Model
+
 ## TODO garbage collector to free up the memory :(
+
+
+
+
