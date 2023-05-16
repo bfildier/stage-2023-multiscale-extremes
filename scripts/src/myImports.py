@@ -1,7 +1,8 @@
 ## Fundamentals and File Management
 import os
 import sys
-import math
+import pickle 
+import math 
 
 ## Math and Data Manipulation
 import numpy as np 
@@ -23,10 +24,18 @@ from plot1DInvLog import *
 from plot1D import *
 from plot2D import *
 
-## ML and stats 
+## dask 
+import dask.array as da
+import dask.bag as db
+import dask.dataframe as dd
+import dask.distributed as ddistributed
+import dask.delayed as delayed
 
+## ML and stats 
+sys.path.insert(0, "/home/mcarenso/.conda/envs/PyLMD/lib/python3.8/site-packages/lmfit/")
+from lmfit import Model, Parameters, report_fit
 from scipy.interpolate import griddata, LinearNDInterpolator
-from lmfit import Model
+from bokeh import *
 
 ## TODO garbage collector to free up the memory :(
 
