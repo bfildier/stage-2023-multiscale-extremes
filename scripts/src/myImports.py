@@ -6,6 +6,7 @@ import math
 ## Math and Data Manipulation
 import numpy as np 
 import xarray as xr
+import dask.array as da
 
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/src')
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/plotting/src')
