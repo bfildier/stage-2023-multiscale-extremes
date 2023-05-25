@@ -104,6 +104,20 @@ def Ponderate_MCS_by_surface(data, MCS_surface=None, grid_surface = None, weight
     return output
 
 def count_rel_nan(arr):
+    """
+    from myFuncs import count_rel_nan
+
+    ## check if the func count_rel_nan works
+    random_array = np.random.rand(1000)
+
+    ## fill random array with 5% of nan 
+    random_array[np.random.choice(1000, 50, replace=False)] = np.nan
+
+    ## check if the function works
+    print(1-count_rel_nan(random_array), "should be close to 0.95")
+    
+    output : "0.95 should be close to 0.95"
+    """
     output = None
     if len(arr.flatten()) == 0 : output = np.nan
     else : output = np.count_nonzero(np.isnan(arr))/len(arr.flatten())
@@ -308,7 +322,17 @@ def maskMax(arr, axis=None, **kwargs):
     output = np.max(arr_masked, axis = axis) 
         
     return output
-    
+
+def createTimeArray(mask, **kwargs):
+    """
+    Inputs : typically a label map transofrmed into a mask (True/False) array
+    Outputs : a time array (same shape as the input) where each pixel value is the time t of the MCS that is present at this pixel at time t.
+    """
+    time_array = np.arange(mask.shape[0])
+    time_array = np.expand_dims(time_array, axis=tuple(range(1, len(mask.shape))))
+    time_array = np.where(mask, time_array, np.nan)
+    time_array = time_array.flatten()  
+    return time_array
              
 # def Aggregate_by_MCS(data , labels, func= np.mean, weights = None, return_MCS_labels = False, test = False):
 #     ### TODO : issue is that by aggregating once per label we have to choose on which x,y grid the MCS must be accounted for. 
