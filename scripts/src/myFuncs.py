@@ -126,7 +126,33 @@ def count_rel_nan(arr):
 def idx_by_label(labels, label_list):
     idxs = [label_list.index(label) for label in labels]
     return idxs
+
+# Define the function to map labels to MCS values and vectorize it
+def Age(label, time, mcs):
+    """MCS and labels must be indexed in the same fashion"""
+    if ~np.isnan(label): 
+
+        time_init = mcs.TimeInit
+        duration = mcs.duration
+        age = (time - time_init + 2)/duration
+
+        return age, duration, time_init if age != 0 else None
+    else:
+        return None
     
+def Age_vec(label_mask, time_array, MCS, labels):
+    out = [np.array([]), np.array([]), np.array([])]
+    for i, label in enumerate(label_mask):
+        time = time_array[i]
+        idx = labels.index(label)
+        mcs = MCS[idx]
+        age, dur, timi = Age(label, time, mcs)
+        out[0] = np.append(out[0], age)
+        out[1] = np.append(out[1], dur)
+        out[2] = np.append(out[2], timi)
+        
+    return out  ## works cause first dimension of label_mask is time
+
 def condFracPrec(arr, axis = None, threshold = 0):
     num_over_threshold = np.count_nonzero(arr > threshold, axis=axis)/(48*32*32)
     return num_over_threshold

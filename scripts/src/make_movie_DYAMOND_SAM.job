@@ -1,6 +1,8 @@
 #!/bin/bash
 
 #SBATCH --partition=zen4
+#SBATCH --account=mcarenso
+#SBATCH --mem=64G
 #SBATCH -o logs/run_%x_%j.o
 #SBATCH -e logs/run_%x_%j.e
 #SBATCH --nodes=1
