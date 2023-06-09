@@ -19,19 +19,19 @@ if args.sim == "SAM" :
     file_seg='/bdd/MT_WORKSPACE/MCS/RCE/SAM/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/TOOCAN_2.07_SAM_large300_2D_irtb.nc'
     file_tracking='/bdd/MT_WORKSPACE/MCS/RCE/SAM/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/FileTracking/TOOCAN-SAM_large300_2D_irtb.dat.gz'
     sim_path = "/bdd/MT_WORKSPACE/MCS/RCE/SAM/INPUTS/v2023_05/SAM_RCE_large300_2D_pr.nc"
-    output_path = "/homedata/mcarenso/Stage2023/SAM/"+stringSST+"K/"
+    output_path = "/homedata/mcarenso/Stage2023/SAM/"+stringSST+"K/6h_duration/"
     
 elif args.sim == "MESONH":
     file_seg='/bdd/MT_WORKSPACE/MCS/RCE/MESONH/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/TOOCAN_2.07_MESONH_large300_2D_irtb.nc'
     file_tracking='/bdd/MT_WORKSPACE/MCS/RCE/MESONH/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/FileTracking/TOOCAN-MESONH_large300_2D_irtb.dat.gz'
     sim_path = '/bdd/MT_WORKSPACE/MCS/RCE/MESONH/INPUTS/v2023_05/MESONH_RCE_large300_2D_pr.nc'
-    output_path = "/homedata/mcarenso/Stage2023/MESONH/"+stringSST+"K/"
+    output_path = "/homedata/mcarenso/Stage2023/MESONH/"+stringSST+"K/6h_duration/"
 
 elif args.sim == "ICON":
     file_seg = '/bdd/MT_WORKSPACE/MCS/RCE/ICON/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/TOOCAN_2.07_ICON_large300_2D_irtb.nc'
     file_tracking = '/bdd/MT_WORKSPACE/MCS/RCE/ICON/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/FileTracking/TOOCAN-ICON_large300_2D_irtb.dat.gz' 
     sim_path = '/bdd/MT_WORKSPACE/MCS/RCE/ICON/INPUTS/v2023_05/ICON_RCE_large300_2D_pr.nc'
-    output_path = "/homedata/mcarenso/Stage2023/ICON/"+stringSST+"K/"
+    output_path = "/homedata/mcarenso/Stage2023/ICON/"+stringSST+"K/6h_duration/"
 
 ##get sim_path files : 
 Precip = xr.open_dataarray(sim_path)
@@ -65,15 +65,15 @@ def idx_by_label(labels, label_list = MCS_labels):
     idxs = [label_list.index(label) for label in labels]
     return idxs
 
-MCS_2h_to_10h = [MCS[i] for i in range(len(MCS)) if MCS[i].duration in np.arange(4, 21, 1).astype(int).tolist()]
-MCS_2h_to_10h_labels = [MCS_2h_to_10h[i].label for i in range(len(MCS_2h_to_10h))]
+MCS_6h = [MCS[i] for i in range(len(MCS)) if MCS[i].duration ==12]
+MCS_6h_labels = [MCS_6h[i].label for i in range(len(MCS_6h))]
         
 ## label_mask contains the label of the MCS over the map
 label_mask = xr.open_dataarray(file_seg, chunks = {'time' :48, 'longitude' : 32, 'latitude' : 32}).isel(time=slice(48*25)).astype(int) 
 
 ## adapt label_mask to 2h_10h MCS
-label_2h_to_10h_mask = label_mask.where(label_mask.isin(MCS_2h_to_10h_labels))
-mask_2h_to_10h = ~label_2h_to_10h_mask.where(label_2h_to_10h_mask.isnull(), False).isnull()
+label_6h_mask = label_mask.where(label_mask.isin(MCS_6h_labels))
+#mask_6h = ~label_6h_mask.where(label_6h_mask.isnull(), False).isnull()
 
 from myFuncs import Age_vec
 
@@ -84,7 +84,7 @@ if os.path.isfile(output_path + output_file):
         
 else : 
     ## compute the age analysis
-    output = dist_Prec.computeAgeAnalysisOverBins(sample = Precip.to_numpy().flatten(), MCS_list = MCS_2h_to_10h, label = label_2h_to_10h_mask.compute().values, sizemax = int(1e6))
+    output = dist_Prec.computeAgeAnalysisOverBins(sample = Precip.to_numpy().flatten(), MCS_list = MCS_6h, label = label_6h_mask.compute().values, sizemax = int(1e6))
     
     ## save the output
     with open(os.path.join(output_path, output_file), 'wb') as file:
@@ -97,13 +97,12 @@ import numpy as np
 Ages_over_bins, Ages_of_Xprecip, Xprecip_over_ages, Xprecip_counts, Ages_per_duration, Ages_of_MaxPrecip, MaxPrecip_over_ages, MaxPrecip_MCS_counts = output
 
 x = dist_Prec.ranks
-MCS_duration_2h_to_10h = np.arange(2, 10.5, 1/2)
 
 # Create DataFrames for each dataset
 df1 = pd.DataFrame({'bin_ranks': x, 'Ages_over_bins': Ages_over_bins})
 df2 = pd.DataFrame({'Ages_of_Xprecip': Ages_of_Xprecip, 'Xprecip_over_ages': Xprecip_over_ages})
 df3 = pd.DataFrame({'Ages_of_Xprecip': Ages_of_Xprecip, 'Xprecip_counts': Xprecip_counts})
-df4 = pd.DataFrame({'MCS_duration_2h_to_10h': MCS_duration_2h_to_10h, 'Ages_per_duration': Ages_per_duration})
+df4 = pd.DataFrame({'Ages_per_duration': Ages_per_duration})
 df5 = pd.DataFrame({'Ages_of_MaxPrecip': Ages_of_MaxPrecip, 'MaxPrecip_over_ages': MaxPrecip_over_ages})
 df6 = pd.DataFrame({'Ages_of_MaxPrecip': Ages_of_MaxPrecip, 'MaxPrecip_MCS_counts': MaxPrecip_MCS_counts})
 
