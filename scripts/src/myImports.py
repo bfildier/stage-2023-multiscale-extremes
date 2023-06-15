@@ -9,6 +9,7 @@ import numpy as np
 import xarray as xr
 import dask.array as da
 import bisect
+import pandas as pd
 
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/src')
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/plotting/src')
@@ -39,7 +40,7 @@ from lmfit import Model, Parameters, report_fit
 from scipy.interpolate import griddata, LinearNDInterpolator
 from bokeh import *
 
-## TODO garbage collector to free up the memory :(
+import gc
 
 
 
