@@ -8,9 +8,11 @@ import math
 import numpy as np 
 import xarray as xr
 import dask.array as da
+import bisect
 
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/src')
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/plotting/src')
+sys.path.insert(0,'/home/mcarenso/code/stage-2023-multiscale-extremes/scripts/src')
 
 import conditionalstats as cs
 

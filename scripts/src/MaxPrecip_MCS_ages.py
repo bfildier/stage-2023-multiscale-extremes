@@ -6,8 +6,17 @@ sys.path.insert(0, os.getcwd()+'/src/')
 sys.path.insert(0, '/home/mcarenso/code/stage-2023-multiscale-extremes/scripts/src/')
 from myImports import *
 
-sim = "SAM"
-stringSST = "300"
+## Parse arguments
+parser = argparse.ArgumentParser(description='Compute the maximum precipitation for each MCS and the distance between the maximum and the center of the MCS')
+parser.add_argument('sim', type=str, default="SAM", help='Simulation name')
+parser.add_argument('SST', type=int, default=300, help='SST value')
+args = parser.parse_args()
+
+## Define simulation and SST
+sim = args.sim
+stringSST = str(args.SST)
+
+print(sim, 'is going on pouloulou')
 
 if sim == "SAM" :     
     file_seg='/bdd/MT_WORKSPACE/MCS/RCE/SAM/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/TOOCAN_2.07_SAM_large300_2D_irtb.nc'
@@ -27,10 +36,12 @@ elif sim == "ICON":
     sim_path = '/bdd/MT_WORKSPACE/MCS/RCE/ICON/INPUTS/v2023_05/ICON_RCE_large300_2D_pr.nc'
     output_path = "/homedata/mcarenso/Stage2023/ICON/"+stringSST+"K/MaxPrecipAnalysis/"
     
-if True :
+if False :
     n_days = 1
     output_path = output_path + "test_1day/"
-    
+else : 
+    n_days = 25
+    output_path = output_path + "25days3decades/"    
 ## Load data
 print("Loading data...")
 Precip = xr.open_dataset(sim_path, engine= "netcdf4").isel(time=slice(48*n_days))
@@ -42,8 +53,13 @@ MCS_labels = [MCS[i].label for i in range(len(MCS))]
 
 ## function to retrieve the indexes in MCS by MCS labels, could be put in myFuncs but need label_list from the tracking file
 def idx_by_label(labels, label_list = MCS_labels):
-    idxs = [label_list.index(label) for label in labels]
-    return idxs
+    ## check if labels is a list or a single label
+    if type(labels) == int:
+        idx = label_list.index(labels)
+        return idx
+    else : 
+        idxs = [label_list.index(label) for label in labels]
+        return idxs
 
 MCS_2h_to_10h = [MCS[i] for i in range(len(MCS)) if (MCS[i].duration in np.arange(4, 21, 1).astype(int).tolist()) and (MCS[i].TimeInit  <= 48*n_days)]
 MCS_2h_to_10h_labels = [MCS_2h_to_10h[i].label for i in range(len(MCS_2h_to_10h))]
@@ -60,7 +76,7 @@ filename = "Max_Precip_per_MCS_data_and_dist.pkl"
 if os.path.isfile(os.path.join(output_path, filename)):
     # File exists, load the object
     with open(os.path.join(output_path, filename), 'rb') as file:
-        dist_Max_Prec = pickle.load(file)
+        dist_Max_Prec, Max_Precip, Max_Precip_index, Max_Precip_label = pickle.load(file)
 else:
     Max_Precip = []  # Initialize the list to store maximum values
     Max_Precip_index = []  # Initialize the list to store first indices
@@ -84,7 +100,7 @@ else:
         print("Distrib and data creation completed at ", (i+1)/len(MCS_2h_to_10h)*100, "%")
 
     Max_Precip = np.array(Max_Precip)
-    dist_Max_Prec = cs.Distribution(name="SAM Precipitation", bintype = "invlogQ", nd = 4, fill_last_decade=True)
+    dist_Max_Prec = cs.Distribution(name="SAM Precipitation", bintype = "invlogQ", nd = 3, fill_last_decade=True)
     dist_Max_Prec.computeDistribution(sample = Max_Precip)
     dist_Max_Prec.storeSamplePoints(sample =  Max_Precip, sizemax = int(1e7))
 
@@ -100,10 +116,15 @@ Ages_of_MaxPrecip_over_bins = [[] for _ in dist_Max_Prec.bin_locations]
 for i, bin_loc in enumerate(dist_Max_Prec.bin_locations):
     for idx in bin_loc:
         label = Max_Precip_label[idx]
-        time = Max_Precip_index[idx][0]
-        
-        Ages_of_MaxPrecip_over_bins[i].extend(Age(label, time, bin_loc, MCS_2h_to_10h[idx_by_label(label)]))
-    
+        time = Max_Precip_index[idx][0][0]
+        ages, durations, timeinits = Age(label, time, MCS_2h_to_10h[idx_by_label(label, label_list=MCS_2h_to_10h_labels)])
+        if ages is not None:
+            if type(ages) == list:        
+                for age in ages : 
+                    Ages_of_MaxPrecip_over_bins[i].append(age)
+            elif type(ages) == np.float64:
+                Ages_of_MaxPrecip_over_bins[i].append(ages)
+                
 filename = "Ages_of_MaxPrecip_over_bins.pkl"
 
 ## save it

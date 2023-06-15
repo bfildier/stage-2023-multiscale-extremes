@@ -129,7 +129,9 @@ def idx_by_label(labels, label_list):
 
 # Define the function to map labels to MCS values and vectorize it
 def Age(label, time, mcs):
-    """MCS and labels must be indexed in the same fashion"""
+    """MCS and labels must be indexed in the same fashion
+    returns a tuple ages, durations, time_inits
+    """
     if ~np.isnan(label): 
 
         time_init = mcs.TimeInit
