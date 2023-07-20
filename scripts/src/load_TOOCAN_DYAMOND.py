@@ -44,7 +44,7 @@ from datetime import datetime
 
 
 class MCS_IntParameters(object):
-   
+    
     def __init__(self):
         self.label = 0
         self.qc_MCS = 0
@@ -84,7 +84,7 @@ class MCS_IntParameters(object):
 ## Ajout B. Fildier ##
 
     def __repr__(self):
-        """Creates a printable version of the Distribution object. Only prints the
+        """Creates a printable version of the Distribution object. Only prints the 
         attribute value when its string fits is small enough."""
 
         out = '< MCS_IntParameters object:\n'
@@ -102,8 +102,8 @@ class MCS_IntParameters(object):
         return out
 
 ## Fin ajout B. Fildier ##
-    
-    
+
+
 class MCS_Lifecycle(object):
     def __init__(self):
         self.qc_im = []
@@ -138,7 +138,7 @@ class MCS_Lifecycle(object):
 ## Ajout B. Fildier ##
 
     def __repr__(self):
-        """Creates a printable version of the Distribution object. Only prints the
+        """Creates a printable version of the Distribution object. Only prints the 
         attribute value when its string fits is small enough."""
 
         out = '< MCS_Lifecycle object:\n'
@@ -161,7 +161,7 @@ class MCS_Lifecycle(object):
 def load_TOOCAN_DYAMOND(FileTOOCAN):
 
     lunit = gzip.open(FileTOOCAN, "rt")
-    #print(FileTOOCAN)
+    print(FileTOOCAN)
 
     #
     # Read the Header
@@ -188,23 +188,20 @@ def load_TOOCAN_DYAMOND(FileTOOCAN):
     header19 = lunit.readline()
     header20 = lunit.readline()
     header21 = lunit.readline()
-    header22 = lunit.readline()
-    header23 = lunit.readline()
-    
-    #print(len(header21.split()))
-    print(len(header22.split()))
-    
 
     data = []
     iMCS = -1
     lines = lunit.readlines()
-    for i in range(1, 24): print(f"header{i} = {eval(f'header{i}')}")
-
+    
+    
     for iline in lines:
         Values = iline.split()
-        print(Values)
-        if header21.split()[0] == '==>':
-       
+        #print(iline,Values)
+
+    
+        if Values[0] == '==>':
+        
+            
             #
             # Read the integrated parameters of the convective systems
             ###########################################################
@@ -259,7 +256,7 @@ def load_TOOCAN_DYAMOND(FileTOOCAN):
 
             data[iMCS].olrmin = float(Values[19])  # minimum Brigthness temperature (K)
 
-            data[iMCS].surfmaxPix_172Wm2 = float(
+            data[iMCS].surfmaxPix_172Wm2 = int(
                 Values[20]
             )  # maximum surface for a 235K threshold of the convective system during its life cycle (pixel)
             data[iMCS].surfmaxkm2_172Wm2 = float(

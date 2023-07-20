@@ -2,14 +2,15 @@
 import os
 import sys
 import pickle 
-import math 
 
 ## Math and Data Manipulation
+import math 
 import numpy as np 
 import xarray as xr
 import dask.array as da
 import bisect
 import pandas as pd
+from collections import defaultdict
 
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/src')
 sys.path.insert(0,'/home/mcarenso/code/conditional-stats/plotting/src')
