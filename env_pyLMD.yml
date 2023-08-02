@@ -26,11 +26,13 @@ dependencies:
   - regex=2022.7.9
   - scipy=1.7.3
   - setuptools=61.2.0
+  - seaborn=0.12.2
   - shapely=1.7.1
+  - sparse=0.13.0
   - spyder=5.1.5
   - tk=8.6.12
   - urllib3=1.26.9
-  - xarray=2022.6.0
+  - xarray=2023.3.0
   - yaml=0.2.5
   - pip:
     - jupyter_contrib_nbextensions
