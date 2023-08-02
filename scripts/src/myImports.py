@@ -41,6 +41,11 @@ from lmfit import Model, Parameters, report_fit
 from scipy.interpolate import griddata, LinearNDInterpolator
 from bokeh import *
 
+## Ben thermo constants for thermo funcs
+from thermoConstants import *
+
+## Illegal stuff
+import warnings
 import gc
 
 

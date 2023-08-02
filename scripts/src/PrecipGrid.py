@@ -11,7 +11,8 @@ class PrecipGrid():
         self.path_safeguard = '/homedata/mcarenso/Stage2023/'+self.name+'_REGIONS/'+self.region+'/'+self.sim+'/'
         self.verbose = verbose
         self.df = self.loadRelTable()
-
+        
+        # could be a function to work around the dataframe with original data
         if self.sim == 'SAM':
             self.indexes_to_ignore = [862,  863,  958,  959, 1054, 1055, 1150, 1151, 1246, 1247, 1342, 1343, 1438, 1439, 1534, 1535, 1630, 1631, 1726, 1727, 1822, 1823]
             self.df = self.df.drop(self.indexes_to_ignore).reset_index(drop=True)
@@ -19,14 +20,19 @@ class PrecipGrid():
             self.df = self.df[self.df["path_dyamond"].str.split(".").apply(lambda x : int(x[1][-7:-1]) >= 30000)].reset_index(drop=True)
             self.index_per_days = [list(group.index) for _, group in self.df.groupby(['month', 'day'])]
             self.index_per_days.remove(self.index_per_days[-1])# last day empty
-            pass
+            self.n_days = len(self.index_per_days)
         
+        #could be included in previous func
         for file in os.listdir(self.path_data2d):
             self.template_native_df = xr.open_dataset(self.path_data2d+file)
             break
         
         self.prepare_data()
 
+        # there is a weird bug making the fill all.nc to be corrupted some times...
+        # working around for now consist in deleting it and then recreating with build_xarray. 
+        # Although weirdly the pixel surf and global pixel surf variables do not seem to survive this process
+        # Calling save_mean_precip seems to corrupt it
         if os.path.isfile(self.path_safeguard+'all.nc'):
             self.ds = xr.open_dataset(self.path_safeguard+'all.nc')
             self.ds.close()
@@ -157,19 +163,20 @@ class PrecipGrid():
         
         self.pixel_surface = self.lat_length_on_center * self.lon_length_on_center
         
-        self.n_lat, self.n_lon = 20, 32          
+        self.n_lat, self.n_lon = 20, 32 ##choose your grid size here         
 
-        self.global_area = self.pixel_surface.sum()/self.n_lat/self.n_lon
-        self.global_lat_area = self.global_area*self.n_lon
+        self.global_area = self.pixel_surface.sum()/self.n_lat/self.n_lon #depending on the remeshed grid point surface you want computed here
+        self.global_lat_area = self.global_area*self.n_lon 
         
         self.lat_global = [i for i in range(self.n_lat)]
         self.lon_global = [j for j in range(self.n_lon)]
         
+        ## We start by computing the area of each latitude band
         self.lat_area = np.sum(self.pixel_surface, axis=1)
         self.cumsum_lat_area = np.cumsum(self.lat_area)
         
         self.i_min, self.i_max, self.alpha_i_min, self.alpha_i_max = self.__get_i_and_alpha_lat__()
-        self.i_min, self.i_max =self.i_min.astype(int), self.i_max.astype(int)
+
         self.slices_i_lat = [slice(i_min+1, i_max) for i_min, i_max in zip(self.i_min[:,0], self.i_max[:,0])]        
         self.area_by_lon_and_global_lat = self._compute_area_by_lon_()
         self.cumsum_area_by_lon_and_global_lat = np.cumsum(self.area_by_lon_and_global_lat, axis = 1)
@@ -180,9 +187,7 @@ class PrecipGrid():
         self.slices_j_lon = self.__build_slices_j_lon__()
         
         self.grid_surface = self.sum_data_from_center_to_global(self.pixel_surface)
-        
-        self.n_days = len(self.index_per_days)
-                
+                        
     def create_day_dim(self):
         self.n_days = len(self.index_per_days)
         if type(self.n_days) is not int:
@@ -226,7 +231,7 @@ class PrecipGrid():
                     i_max[i, :] = i_lat
                     alpha_i_max[i, :] = bottom_contrib if not (math.isclose(cum_global_length, border_right)) else 1
                     
-        return i_min, i_max, alpha_i_min, alpha_i_max
+        return i_min.astype(int), i_max.astype(int), alpha_i_min, alpha_i_max
 
     def __get_j_and_alpha_lon__(self):
         j_min, j_max = np.zeros((self.n_lat, self.n_lon)), np.zeros((self.n_lat, self.n_lon))
@@ -307,42 +312,46 @@ class PrecipGrid():
         return X
     
     def spatial_mean_data_from_center_to_global(self, data_on_center):
-        x = data_on_center*self.pixel_surface
+        x = data_on_center*self.pixel_surface if type(data_on_center) == np.ndarray else data_on_center.values*self.pixel_surface
         X = np.zeros((self.n_lat, self.n_lon))
         for i, slice_i_lat in enumerate(self.slices_i_lat):
             for j, slice_j_lon in enumerate(self.slices_j_lon[i]):
                 if self.verbose : print(slice_i_lat, slice_j_lon)
-                mid_sum = np.sum(x[slice_i_lat, slice_j_lon])
-                bottom_sum = np.sum( x[self.i_min[i,j], slice_j_lon]*self.alpha_i_min[i,j])
-                top_sum = np.sum( x[self.i_max[i,j], slice_j_lon]*self.alpha_i_max[i,j])
-                left_sum = np.sum( x[slice_i_lat, self.j_min[i,j]]*self.alpha_j_min[i,j])
-                right_sum = np.sum( x[slice_i_lat, self.j_max[i,j]]*self.alpha_j_max[i,j])
+                mid= x[slice_i_lat, slice_j_lon].flatten()
+                bottom = x[self.i_min[i,j], slice_j_lon]*self.alpha_i_min[i,j].flatten()
+                top = x[self.i_max[i,j], slice_j_lon]*self.alpha_i_max[i,j].flatten()
+                left = x[slice_i_lat, self.j_min[i,j]]*self.alpha_j_min[i,j].flatten()
+                right = x[slice_i_lat, self.j_max[i,j]]*self.alpha_j_max[i,j].flatten()
                 bottom_left_corner = x[self.i_min[i,j], self.j_min[i,j]]*self.alpha_j_min[i,j]*self.alpha_i_min[i,j]
                 bottom_right_corner = x[self.i_min[i,j], self.j_max[i,j]]*self.alpha_j_max[i,j]*self.alpha_i_min[i,j]
                 top_left_corner = x[self.i_max[i,j], self.j_min[i,j]]*self.alpha_j_min[i,j]*self.alpha_i_max[i,j]
                 top_right_corner = x[self.i_max[i,j], self.j_max[i,j]]*self.alpha_j_max[i,j]*self.alpha_i_max[i,j]
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
+                    X[i, j] = np.nanmean(np.concatenate([mid ,bottom ,top ,left ,right ,
+                                            np.array([bottom_left_corner ,bottom_right_corner ,top_left_corner ,top_right_corner])]))
 
-                X[i, j] = mid_sum+bottom_sum+top_sum+left_sum+right_sum+bottom_left_corner+bottom_right_corner+top_left_corner+top_right_corner
-
-        return X/self.grid_surface         
+        return X/self.grid_surface       
     
     def spatial_max_data_from_center_to_global(self, data_on_center):
-        x = data_on_center
+        x = data_on_center if type(data_on_center) == np.ndarray else data_on_center.values
         X = np.zeros((self.n_lat, self.n_lon))
         alpha_max = self.__build_alpha_max__()
         for i, slice_i_lat in enumerate(self.slices_i_lat):
             for j, slice_j_lon in enumerate(self.slices_j_lon[i]):
                 if self.verbose : print(slice_i_lat, slice_j_lon)
-                m = x[slice_i_lat, slice_j_lon].values.flatten()
-                b = (x[self.i_min[i,j], slice_j_lon]*alpha_max[self.i_min[i,j], slice_j_lon]).values.flatten()
-                t = (x[self.i_max[i,j], slice_j_lon]*self.alpha_max[self.i_max[i,j], slice_j_lon]).values.flatten()
-                l = (x[slice_i_lat, self.j_min[i,j]]*self.alpha_max[slice_i_lat, self.j_min[i,j]]).values.flatten()
-                r = (x[slice_i_lat, self.j_max[i,j]]*self.alpha_max[slice_i_lat, self.j_max[i,j]]).values.flatten()
-                blc = (x[self.i_min[i,j], self.j_min[i,j]]*self.alpha_max[self.i_min[i,j], self.j_min[i,j]]).values.flatten()
-                btc = (x[self.i_min[i,j], self.j_max[i,j]]*self.alpha_max[self.i_min[i,j], self.j_max[i,j]]).values.flatten()
-                tlc = (x[self.i_max[i,j], self.j_min[i,j]]*self.alpha_max[self.i_max[i,j], self.j_min[i,j]]).values.flatten()
-                trc = (x[self.i_max[i,j], self.j_max[i,j]]*self.alpha_max[self.i_max[i,j], self.j_max[i,j]]).values.flatten()
-                X[i, j] = max(max(array) for array in [m, b, t, l, r, blc, btc, tlc, trc])
+                m = np.nanmax(x[slice_i_lat, slice_j_lon].flatten())
+                b = np.nanmax((x[self.i_min[i,j], slice_j_lon]*alpha_max[self.i_min[i,j], slice_j_lon]).flatten())
+                t = np.nanmax((x[self.i_max[i,j], slice_j_lon]*self.alpha_max[self.i_max[i,j], slice_j_lon]).flatten())
+                l = np.nanmax((x[slice_i_lat, self.j_min[i,j]]*self.alpha_max[slice_i_lat, self.j_min[i,j]]).flatten())
+                r = np.nanmax((x[slice_i_lat, self.j_max[i,j]]*self.alpha_max[slice_i_lat, self.j_max[i,j]]).flatten())
+                blc = (x[self.i_min[i,j], self.j_min[i,j]]*self.alpha_max[self.i_min[i,j], self.j_min[i,j]]).flatten()
+                btc = (x[self.i_min[i,j], self.j_max[i,j]]*self.alpha_max[self.i_min[i,j], self.j_max[i,j]]).flatten()
+                tlc = (x[self.i_max[i,j], self.j_min[i,j]]*self.alpha_max[self.i_max[i,j], self.j_min[i,j]]).flatten()
+                trc = (x[self.i_max[i,j], self.j_max[i,j]]*self.alpha_max[self.i_max[i,j], self.j_max[i,j]]).flatten()
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
+                    X[i, j] = np.nanmax(np.array([m, b, t, l, r, blc, btc, tlc, trc]))
         print(X.shape, X)
         return X     
                 

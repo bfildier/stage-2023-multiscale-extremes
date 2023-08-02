@@ -320,13 +320,10 @@ def growthRate(arr, axis=None, MCS_list = None):
                     output[t,y,x] = np.nanmean(MCS_growthRateMean)
     return output
     
-def maskMean(arr, axis=None, **kwargs):
-    
+def maskMean(arr, axis=None, **kwargs):    
     #TOOCAN segmentation masks (les labels des objets MCS, dans la grille originale x,y,t)
-    temp = "300"
-    file_seg='/bdd/MT_WORKSPACE/MCS/RCE/SAM/TOOCAN/TOOCAN_v2022_04/irtb/TOOCAN_2.07_SAM_RCE_large'+temp+'_2D_irtb.nc'   ## TODO PPass arguemnt temp correctly
-    n_days = 20
-    label_mask = xr.open_dataarray(file_seg).isel(time=slice(48*n_days)) ## TODO Pass arguemnt n_days correctly
+    file_seg='/bdd/MT_WORKSPACE/MCS/RCE/SAM/TOOCAN/TOOCAN_v2022_04/irtb/TOOCAN_2.07_SAM_RCE_large300_2D_irtb.nc'   ## TODO PPass arguemnt temp correctly
+    label_mask = xr.open_dataarray(file_seg)
     mask = ~np.isnan(label_mask.values)
     mask = mask[ :, :,:, np.newaxis, np.newaxis, np.newaxis]
     mask = np.reshape(mask, arr.shape)
@@ -340,9 +337,8 @@ def maskMax(arr, axis=None, **kwargs):
     
     #TOOCAN segmentation masks (les labels des objets MCS, dans la grille originale x,y,t)
     temp = "300"
-    file_seg='/bdd/MT_WORKSPACE/MCS/RCE/SAM/TOOCAN/TOOCAN_v2022_04/irtb/TOOCAN_2.07_SAM_RCE_large'+temp+'_2D_irtb.nc'   ## TODO PPass arguemnt temp correctly
-    n_days = 20
-    label_mask = xr.open_dataarray(file_seg).isel(time=slice(48*n_days)) ## TODO Pass arguemnt n_days correctly
+    file_seg='/bdd/MT_WORKSPACE/MCS/RCE/SAM/TOOCAN/TOOCAN_v2022_04/irtb/TOOCAN_2.07_SAM_RCE_large300_2D_irtb.nc'   ## TODO PPass arguemnt temp correctly
+    label_mask = xr.open_dataarray(file_seg)
     mask = ~np.isnan(label_mask.values)
     mask = mask[ :, :,:, np.newaxis, np.newaxis, np.newaxis]
     mask = np.reshape(mask, arr.shape)

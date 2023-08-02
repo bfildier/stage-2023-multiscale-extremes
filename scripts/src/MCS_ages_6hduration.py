@@ -31,7 +31,7 @@ elif args.sim == "ICON":
     file_seg = '/bdd/MT_WORKSPACE/MCS/RCE/ICON/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/TOOCAN_2.07_ICON_large300_2D_irtb.nc'
     file_tracking = '/bdd/MT_WORKSPACE/MCS/RCE/ICON/TOOCAN/TOOCAN_v2023_05/Dspread0K/irtb/FileTracking/TOOCAN-ICON_large300_2D_irtb.dat.gz' 
     sim_path = '/bdd/MT_WORKSPACE/MCS/RCE/ICON/INPUTS/v2023_05/ICON_RCE_large300_2D_pr.nc'
-    output_path = "/homedata/mcarenso/Stage2023/ICON/"+stringSST+"K/6h_duration/"
+    output_path = "/homedata/mcarenso/Stage2023/ICON/"+stringSST+"K_no_filter/6h_duration/"
 
 ##get sim_path files : 
 Precip = xr.open_dataarray(sim_path)
