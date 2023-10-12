@@ -357,7 +357,28 @@ def createTimeArray(mask, **kwargs):
     time_array = np.where(mask, time_array, np.nan)
     time_array = time_array.flatten()  
     return time_array
-             
+
+## I need a function that takes the mask of MCS and returns a mask with contour of each MCS identified with their own label
+
+def get_MCS_contour_mask(mask):
+    contours = np.zeros_like(mask)
+    for j in np.arange(mask.shape[1]-1):
+        for i in np.arange(mask.shape[0]-1):
+        ## handle the fact that mask contains nan when no label is present
+            if not (np.isnan(mask[i,j]) and np.isnan(mask[i,j+1])) and mask[i,j] != mask[i,j+1]  :
+                contours[i,j] = 1
+            if not (np.isnan(mask[i,j]) and np.isnan(mask[i+1,j])) and mask[i,j] != mask[i+1,j] :
+                contours[i,j] = 1
+                
+    # for i in np.arange(mask.shape[0]-1, -1, -1):
+    #     for j in np.arange(mask.shape[1]-1, -1, -1):
+    #         if mask[i,j] != mask[i,j-1] and not (np.isnan(mask[i,j]) and np.isnan(mask[i,j-1])):
+    #             contours[i,j] = 1
+    #         if mask[i,j] != mask[i-1,j] and not (np.isnan(mask[i,j]) and np.isnan(mask[i-1,j])):
+    #             contours[i,j] = 1
+        
+    return contours
+            
 # def Aggregate_by_MCS(data , labels, func= np.mean, weights = None, return_MCS_labels = False, test = False):
 #     ### TODO : issue is that by aggregating once per label we have to choose on which x,y grid the MCS must be accounted for. 
 #     """

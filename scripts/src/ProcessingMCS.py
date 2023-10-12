@@ -107,7 +107,7 @@ class ProcessMCS(PrecipGrid):
                 os.remove(self.path_safeguard+'all.nc')
             self.ds.to_netcdf(self.path_safeguard+'all.nc', format='NETCDF4', mode='w')
             return self.ds
-        else : print(key+ 'already saved, skipping...')
+        else : print(key+ ' already saved, skipping...')
         
         #close the dataset
         self.ds.close()
